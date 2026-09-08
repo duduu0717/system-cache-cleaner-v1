@@ -1,0 +1,10 @@
+[project]
+name = "system-cache-cleaner"
+version = "1.0.0"
+description = "A small and safe Windows cache cleaner desktop application"
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
