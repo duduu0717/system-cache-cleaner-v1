@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import shutil
+import sys
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -49,8 +50,8 @@ class CleanResult:
 
 def default_categories() -> list[CacheCategory]:
     """Return the small, fixed set of cache locations supported by V1.0."""
-    local_app_data = Path(os.environ.get("LOCALAPPDATA", ""))
-    user_temp = Path(os.environ.get("TEMP", ""))
+    local_app_data = os.environ.get("LOCALAPPDATA")
+    user_temp = os.environ.get("TEMP")
     windows_dir = Path(os.environ.get("WINDIR", r"C:\Windows"))
 
     return [
@@ -58,7 +59,7 @@ def default_categories() -> list[CacheCategory]:
             "user_temp",
             "用户临时文件",
             "当前用户和应用程序产生的临时文件",
-            (user_temp,),
+            (Path(user_temp),) if user_temp else (),
         ),
         CacheCategory(
             "windows_temp",
@@ -70,7 +71,7 @@ def default_categories() -> list[CacheCategory]:
             "thumbnail_cache",
             "缩略图缓存",
             "Windows 资源管理器生成的缩略图数据库",
-            (local_app_data / "Microsoft" / "Windows" / "Explorer",),
+            (Path(local_app_data) / "Microsoft" / "Windows" / "Explorer",) if local_app_data else (),
             ("thumbcache_*.db",),
         ),
     ]
@@ -86,7 +87,20 @@ def _matches(path: Path, patterns: Iterable[str]) -> bool:
     return any(path.match(pattern) for pattern in patterns)
 
 
-def _walk_files(root: Path) -> Iterable[Path]:
+def _is_within(path: Path, roots: Iterable[Path]) -> bool:
+    try:
+        resolved = path.resolve(strict=False)
+        return any(resolved == root.resolve(strict=False) or root.resolve(strict=False) in resolved.parents for root in roots)
+    except OSError:
+        return False
+
+
+def runtime_exclusions() -> tuple[Path, ...]:
+    bundle_dir = getattr(sys, "_MEIPASS", None)
+    return (Path(bundle_dir),) if bundle_dir else ()
+
+
+def _walk_files(root: Path, excluded_roots: tuple[Path, ...] = ()) -> Iterable[Path]:
     """Walk without following links and continue past inaccessible entries."""
     pending = [root]
     while pending:
@@ -95,12 +109,15 @@ def _walk_files(root: Path) -> Iterable[Path]:
             with os.scandir(current) as entries:
                 for entry in entries:
                     try:
+                        entry_path = Path(entry.path)
+                        if _is_within(entry_path, excluded_roots):
+                            continue
                         if entry.is_symlink():
                             continue
                         if entry.is_dir(follow_symlinks=False):
-                            pending.append(Path(entry.path))
+                            pending.append(entry_path)
                         elif entry.is_file(follow_symlinks=False):
-                            yield Path(entry.path)
+                            yield entry_path
                     except OSError:
                         continue
         except OSError:
@@ -115,7 +132,7 @@ def scan_category(
     for root in category.roots:
         if not root or not root.is_dir():
             continue
-        for path in _walk_files(root):
+        for path in _walk_files(root, runtime_exclusions()):
             if not _matches(path, category.patterns):
                 continue
             try:
