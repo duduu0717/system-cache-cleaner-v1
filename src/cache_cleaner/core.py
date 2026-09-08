@@ -49,7 +49,6 @@ class CleanResult:
 
 
 def default_categories() -> list[CacheCategory]:
-    """Return the small, fixed set of cache locations supported by V1.0."""
     local_app_data = os.environ.get("LOCALAPPDATA")
     user_temp = os.environ.get("TEMP")
     windows_dir = Path(os.environ.get("WINDIR", r"C:\Windows"))
@@ -71,7 +70,11 @@ def default_categories() -> list[CacheCategory]:
             "thumbnail_cache",
             "缩略图缓存",
             "Windows 资源管理器生成的缩略图数据库",
-            (Path(local_app_data) / "Microsoft" / "Windows" / "Explorer",) if local_app_data else (),
+            (
+                (Path(local_app_data) / "Microsoft" / "Windows" / "Explorer",)
+                if local_app_data
+                else ()
+            ),
             ("thumbcache_*.db",),
         ),
     ]
@@ -90,7 +93,11 @@ def _matches(path: Path, patterns: Iterable[str]) -> bool:
 def _is_within(path: Path, roots: Iterable[Path]) -> bool:
     try:
         resolved = path.resolve(strict=False)
-        return any(resolved == root.resolve(strict=False) or root.resolve(strict=False) in resolved.parents for root in roots)
+        for root in roots:
+            resolved_root = root.resolve(strict=False)
+            if resolved == resolved_root or resolved_root in resolved.parents:
+                return True
+        return False
     except OSError:
         return False
 
