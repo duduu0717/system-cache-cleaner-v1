@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import os
 import shutil
+import time
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 from typing import Callable, Iterable
 
@@ -33,6 +35,16 @@ class DiskInfo:
     total: int
     used: int
     free: int
+
+
+@dataclass
+class CleanResult:
+    selected_categories: int = 0
+    success_count: int = 0
+    failed_count: int = 0
+    released_bytes: int = 0
+    elapsed_seconds: float = 0.0
+    failures: list[str] = field(default_factory=list)
 
 
 def default_categories() -> list[CacheCategory]:
@@ -131,6 +143,78 @@ def scan_all(
     return results
 
 
+def _is_safe_file(path: Path, allowed_roots: tuple[Path, ...]) -> bool:
+    """Only accept normal files located below an explicitly allowed root."""
+    try:
+        if path.is_symlink() or not path.is_file():
+            return False
+        resolved = path.resolve(strict=True)
+        for root in allowed_roots:
+            if not root or not root.is_dir():
+                continue
+            try:
+                resolved.relative_to(root.resolve(strict=True))
+                return True
+            except ValueError:
+                continue
+    except OSError:
+        return False
+    return False
+
+
+def clean_selected(
+    results: Iterable[ScanResult],
+    selected_keys: set[str],
+    log_path: Path,
+    progress: Callable[[str, int, int, int], None] | None = None,
+) -> CleanResult:
+    """Delete selected scanned files after revalidating every individual path."""
+    started = time.monotonic()
+    summary = CleanResult()
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    log_lines = [f"清理开始时间: {datetime.now():%Y-%m-%d %H:%M:%S}"]
+
+    for result in results:
+        if result.category.key not in selected_keys:
+            continue
+        summary.selected_categories += 1
+        log_lines.append(f"\n[{result.category.name}]")
+        total = result.file_count
+        for index, path in enumerate(result.files, start=1):
+            if not _is_safe_file(path, result.category.roots):
+                summary.failed_count += 1
+                message = f"拒绝不安全或已失效的路径: {path}"
+                summary.failures.append(message)
+                log_lines.append(f"失败 | {message}")
+            else:
+                try:
+                    size = path.stat(follow_symlinks=False).st_size
+                    path.unlink()
+                    summary.success_count += 1
+                    summary.released_bytes += size
+                    log_lines.append(f"成功 | {size} B | {path}")
+                except OSError as exc:
+                    summary.failed_count += 1
+                    message = f"{path} | {exc}"
+                    summary.failures.append(message)
+                    log_lines.append(f"失败 | {message}")
+            if progress:
+                progress(result.category.key, index, total, summary.released_bytes)
+
+    summary.elapsed_seconds = time.monotonic() - started
+    log_lines.extend(
+        [
+            "",
+            f"成功文件数: {summary.success_count}",
+            f"失败文件数: {summary.failed_count}",
+            f"释放字节数: {summary.released_bytes}",
+            f"清理耗时: {summary.elapsed_seconds:.2f} 秒",
+        ]
+    )
+    log_path.write_text("\n".join(log_lines), encoding="utf-8")
+    return summary
+
+
 def format_bytes(value: int) -> str:
     size = float(max(0, value))
     for unit in ("B", "KB", "MB", "GB", "TB"):
@@ -138,4 +222,3 @@ def format_bytes(value: int) -> str:
             return f"{size:.0f} {unit}" if unit == "B" else f"{size:.2f} {unit}"
         size /= 1024
     return "0 B"
-
