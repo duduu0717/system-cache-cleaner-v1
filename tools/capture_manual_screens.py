@@ -211,7 +211,7 @@ def main() -> None:
     annotate("01_package.png", [(28, 120, 1172, 190)])
     annotate("02_home.png", [(386, 462, 550, 526)])
     annotate("03_scan.png", [(205, 395, 735, 465)])
-    annotate("04_results_real.png", [(54, 274, 879, 461), (709, 526, 880, 590)])
+    annotate("04_results_real.png", [(54, 274, 879, 461), (709, 550, 880, 613)])
     if confirm_box:
         annotate("05_confirm_real.png", [confirm_box], scale_coords=False)
     annotate("06_clean.png", [(205, 392, 735, 466)])
