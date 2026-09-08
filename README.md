@@ -38,5 +38,29 @@
 - Python 3.10 或更高版本
 - Tkinter（Python Windows 安装包默认包含）
 
-> 当前仓库处于开发阶段，正式可执行文件将在 V1.0 Release 中提供。
+## 从源码运行
 
+```powershell
+python run_app.py
+```
+
+运行测试：
+
+```powershell
+python -m pytest -q
+```
+
+## 项目结构
+
+```text
+src/cache_cleaner/   核心扫描、清理逻辑和桌面界面
+tests/               自动化测试
+screenshots/         实际程序界面截图
+docs/                Word 操作说明书
+tools/               截图和文档生成工具
+run_app.py           源码启动入口
+```
+
+## 下载成品
+
+不希望安装 Python 的用户可在 GitHub Releases 下载 `系统缓存清理工具V1.0.zip`，解压后运行 EXE。
