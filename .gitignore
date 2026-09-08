@@ -8,3 +8,6 @@ dist/
 logs/*.log
 release/
 *_测试题.zip
+docs/.manual_runtime/
+docs/manual-template-preview.pdf
+docs/manual_images/qa_page_*.png
