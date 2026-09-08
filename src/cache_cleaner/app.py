@@ -86,9 +86,6 @@ class CacheCleanerApp(tk.Tk):
         tk.Label(header, text=role, bg="#164f9e", fg="#e2e8f0", font=("Microsoft YaHei UI", 9)).pack(side="right", padx=30)
         self.content = tk.Frame(self, bg=BG)
         self.content.pack(fill="both", expand=True, padx=34, pady=26)
-        footer = tk.Frame(self, bg=BG, height=28)
-        footer.pack(fill="x", padx=34)
-        tk.Label(footer, text="仅处理预设缓存目录，不扫描个人文档", bg=BG, fg=MUTED, font=("Microsoft YaHei UI", 9)).pack(side="left")
 
     def _clear(self) -> None:
         for widget in self.content.winfo_children():
