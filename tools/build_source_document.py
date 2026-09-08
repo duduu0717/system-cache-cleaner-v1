@@ -23,7 +23,7 @@ SOURCE_FILES = [
 MIN_LINES_PER_PAGE = 50
 
 
-def set_font(run, name="Consolas", size=6.7, bold=False, color=None):
+def set_font(run, name="Consolas", size=8.0, bold=False, color=None):
     run.font.name = name
     run._element.get_or_add_rPr().rFonts.set(qn("w:eastAsia"), name)
     run.font.size = Pt(size)
@@ -102,15 +102,15 @@ def add_file_label(doc, relative_path):
     paragraph = doc.add_paragraph(style="SourceFile")
     paragraph.paragraph_format.keep_with_next = True
     shade_paragraph(paragraph)
-    set_font(paragraph.add_run(f"文件：{relative_path}"), "宋体", 7.2, True, "333333")
+    set_font(paragraph.add_run(f"文件：{relative_path}"), "宋体", 8.2, True, "333333")
 
 
 def add_code_line(doc, line_number, text):
     paragraph = doc.add_paragraph(style="SourceCode")
     number = paragraph.add_run(f"{line_number:>4}  ")
-    set_font(number, "Consolas", 6.7, False, "777777")
+    set_font(number, "Consolas", 8.0, False, "777777")
     code = paragraph.add_run(text if text else " ")
-    set_font(code, "Consolas", 6.7, False, "111111")
+    set_font(code, "Consolas", 8.0, False, "111111")
 
 
 doc = Document()
@@ -121,11 +121,11 @@ code_style = styles.add_style("SourceCode", WD_STYLE_TYPE.PARAGRAPH)
 code_style.paragraph_format.space_before = Pt(0)
 code_style.paragraph_format.space_after = Pt(0)
 code_style.paragraph_format.line_spacing_rule = WD_LINE_SPACING.EXACTLY
-code_style.paragraph_format.line_spacing = Pt(8.2)
+code_style.paragraph_format.line_spacing = Pt(11.2)
 code_style.paragraph_format.tab_stops.add_tab_stop(Cm(1.0))
 code_style.font.name = "Consolas"
 code_style._element.get_or_add_rPr().rFonts.set(qn("w:eastAsia"), "Consolas")
-code_style.font.size = Pt(6.7)
+code_style.font.size = Pt(8.0)
 
 file_style = styles.add_style("SourceFile", WD_STYLE_TYPE.PARAGRAPH)
 file_style.paragraph_format.space_before = Pt(2)
