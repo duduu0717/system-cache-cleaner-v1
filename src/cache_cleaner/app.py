@@ -147,7 +147,7 @@ class CacheCleanerApp(tk.Tk):
         self._title("扫描结果", f"共发现 {format_bytes(total)} 可清理空间，请确认需要清理的项目")
         panel = self._panel(); self.selected = {}
         header = tk.Frame(panel, bg="#f7f9fc"); header.pack(fill="x", padx=1, pady=(1, 0))
-        for text, side, width in [("清理项目", "left", 28), ("文件数量", "right", 12), ("占用空间", "right", 14)]: tk.Label(header, text=text, bg="#f7f9fc", fg=MUTED, width=width, anchor="w" if side=="left" else "e", font=("Microsoft YaHei UI", 9)).pack(side=side, padx=18, pady=12)
+        for text, side, width in [("清理项目", "left", 28), ("占用空间", "right", 14), ("文件数量", "right", 12)]: tk.Label(header, text=text, bg="#f7f9fc", fg=MUTED, width=width, anchor="w" if side=="left" else "e", font=("Microsoft YaHei UI", 9)).pack(side=side, padx=18, pady=12)
         for result in self.results:
             row = tk.Frame(panel, bg=PANEL); row.pack(fill="x", padx=20, pady=8)
             var = tk.BooleanVar(value=True); self.selected[result.category.key] = var
