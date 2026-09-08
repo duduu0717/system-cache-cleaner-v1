@@ -18,6 +18,7 @@ def main() -> None:
     parser.add_argument("--summary")
     args = parser.parse_args()
 
+    results = None if args.state == "complete" else scan_all()
     app = CacheCleanerApp()
     app.geometry("920x620+180+80")
     app.update_idletasks()
@@ -32,7 +33,7 @@ def main() -> None:
         )
         app._show_complete(result, Path(data["log_path"]))
     else:
-        app.results = scan_all()
+        app.results = results
         app._show_results()
         if args.state == "confirm":
             app.after(500, app._confirm_clean)
